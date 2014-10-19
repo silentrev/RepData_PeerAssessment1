@@ -3,35 +3,40 @@
 ---------
 ## Loading and preprocessing the data
 Read in data from the file activity.csv using the read.csv-function
-```{r, echo=TRUE}
+
+```r
 AcitvityData<- read.csv("activity.csv", header=TRUE, sep=",")
 ```
 
 Format the date.
-```{r, echo=TRUE}
+
+```r
 AcitvityData$date <- as.Date(AcitvityData$date)
 ```
 
 Load librarys for later use
-```{r, echo=TRUE}
+
+```r
 library(plyr)
 library(ggplot2)
 ```
 
 ## What is mean total number of steps taken per day?
 
-```{r, echo=TRUE}
+
+```r
     daytotal <- ddply(AcitvityData, "date", summarise, Mean = mean(steps, na.rm = TRUE), 
                  Median = median(steps), sum = sum(steps))
 
 mean_steps <- round(mean(daytotal$sum, na.rm = TRUE), 0) 
 median_steps <- round(median(daytotal$sum, na.rm = TRUE), 0)
 ```
-The subject took a mean of `r as.character(mean_steps)` and a median of `r as.character(median_steps)` steps per day
+The subject took a mean of 10766 and a median of 10765 steps per day
 
 
 Histogram of total number of steps each day?
-```{r, echo=TRUE}
+
+```r
 histogram <- 
       qplot(x=date, y=steps,
             data=subset(AcitvityData, complete.cases(AcitvityData)),
@@ -41,33 +46,41 @@ histogram <-
 plot(histogram)
 ```
 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
+
 ## What is the daily activity pattern?
 Plot daily activity based on mean steps per interval
-```{r, echo=TRUE}
+
+```r
 intervaltotal <- ddply(AcitvityData, "interval", summarise, Mean = mean(steps, na.rm = TRUE))
 
 qplot(x=intervaltotal$interval, y=intervaltotal$Mean, xlab="Interval", ylab="Mean Steps", geom="line", main="Figure 2: Mean number of steps per interval")
 ```
 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
+
 On average across all the days in the dataset, the 5-minute interval contains the maximum number of steps?
-```{r, echo=TRUE}
+
+```r
 # which 5-minute interval contains the maximum number of steps
  Smax = intervaltotal[ (which.max(intervaltotal$Mean)), 1]
 ```
-The `r as.character(Smax)` interval contains the maximum number of steps
+The 835 interval contains the maximum number of steps
 
 ## Imputing missing values
 Total number of missing values
-```{r, echo=TRUE}
+
+```r
 totalMissingValues <- sum(!complete.cases(AcitvityData))
 ```
-The total number of missing values is `r as.character(totalMissingValues)`.
+The total number of missing values is 2304.
 
 ### Strategy for filling missing values 
 If a values is missing, the mean for that interval is used 
 to fill the data set.
 
-```{r, echo=TRUE}
+
+```r
 fullInterval <- do.call(rbind, replicate(((nrow(AcitvityData))/nrow(intervaltotal)), 
                   intervaltotal, simplify=FALSE))
 
@@ -89,20 +102,24 @@ histogram <-
 plot(histogram)
 ```
 
-```{r, echo=TRUE}
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+
+
+```r
 daytotalComp <- ddply(AcitvityDataComplete, "date", summarise, Mean = mean(steps, na.rm = TRUE), 
              Median = median(steps), sum = sum(steps))
 
 mean_steps_Comp <- round(mean(daytotalComp$sum, na.rm = TRUE), 0) 
 median_steps_Comp <- round(median(daytotalComp$sum, na.rm = TRUE), 0)
 ```
-After filling in missing values the mean number of steps is `r as.character(mean_steps_Comp)`, the median is `r as.character(median_steps_Comp)`.
+After filling in missing values the mean number of steps is 10766, the median is 10766.
  
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 A panel plot is used to display the difference between the activity pattern between weekdays and weekends
-```{r, echo=TRUE}
+
+```r
 weekdays <- as.POSIXlt(AcitvityDataComplete$date)$wday
 AcitvityDataComplete <- cbind(AcitvityDataComplete, weekdays)
 AcitvityDataComplete$weekday <- weekdays
@@ -122,6 +139,7 @@ intervaltotalComp <- ddply(AcitvityDataComplete, c("interval","weekday"),
 
 ggplot(intervaltotalComp, aes(interval, Mean)) + geom_line() + facet_grid(weekday 
                   ~ .)+ xlab("5 -minute interval") + ylab("Number of steps")
-
 ```
+
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
 
